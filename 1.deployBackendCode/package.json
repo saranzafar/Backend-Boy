@@ -1,0 +1,20 @@
+{
+  "name": "1deploybackendcode",
+  "version": "1.0.0",
+  "description": "here we are going to deploy out first backend code",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [
+    "node",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemon": "^3.1.0"
+  }
+}
