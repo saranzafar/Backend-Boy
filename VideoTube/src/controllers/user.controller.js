@@ -17,8 +17,10 @@ const registerUser = AsyncHandler(async (req, res) => {
 
     const { userName, email, fullName, password } = req.body;
 
-    console.log("email: ", email);
-    console.log("password: ", password);
+    // console.log("email: ", email);
+    // console.log("password: ", password);
+    // console.log("fullName: ", fullName);
+    // console.log("userName: ", userName);
 
     //validation
     if ([userName, email, fullName,
@@ -31,7 +33,7 @@ const registerUser = AsyncHandler(async (req, res) => {
     // }
 
     // check if user already exist
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ userName }, { email }]
     })
     if (existedUser) {
@@ -39,17 +41,24 @@ const registerUser = AsyncHandler(async (req, res) => {
     }
 
     //check for image check for avatar
-    const avatarLocalPath = req.field?.avatar[0]?.path;
-    const coverImagrLocalPath = req.field?.coverImage[0]?.path;
+    const avatarLocalPath = req.files?.avatar[0]?.path;
+    // console.log("req.files: ", req.files);
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // alternative 
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is require")
     }
 
     // upload them to cloudinary, avater
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImagrLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
     if (!avatar) {
-        throw new ApiError(400, "Avatar file is require")
+        throw new ApiError(400, "Avatar file is required")
     }
 
     // create user object - create entery in DB
@@ -68,7 +77,7 @@ const registerUser = AsyncHandler(async (req, res) => {
     )
 
     if (!createdUser) {
-        throw new Error("Something went wrong while registering the user");
+        throw new ApiError("Something went wrong while registering the user");
     }
 
     return res.status(201).json(
