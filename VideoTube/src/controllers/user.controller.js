@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -324,7 +325,63 @@ const updateUserCoverImage = AsyncHandler(async (req, res) => {
         )
 })
 
-const userChannelProfile = AsyncHandler(async (req, res) => {
+const getWatchHistory = AsyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                // mongoDB return string instesd of ID so mongoose is responsible for converting that string object into ID
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",//user model refrence
+                foreignField: "_id",
+                as: "watchHistory",
+
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        userName: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res.status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user[0].watchHistory,
+                "Watch History Fetched Successfully"
+            )
+        )
+})
+
+const getUserChannelProfile = AsyncHandler(async (req, res) => {
     const { userName } = req.params;
     if (!userName?.trim()) {
         throw new ApiError(400, 'Username must be provided')
@@ -402,5 +459,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    userChannelProfile,
+    getUserChannelProfile,
+    getWatchHistory,
 }   
