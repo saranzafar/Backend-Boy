@@ -265,6 +265,7 @@ const updateAccountDetails = AsyncHandler(async (req, res) => {
 })
 
 const updateUserAvatar = AsyncHandler(async (req, res) => {
+    //delete old avatar
     const avatarLocalPath = req.file?.path
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar File is Missing")
@@ -294,6 +295,7 @@ const updateUserAvatar = AsyncHandler(async (req, res) => {
 })
 
 const updateUserCoverImage = AsyncHandler(async (req, res) => {
+    //delete old thumbnail image
     const coverImageLocalPath = req.file?.path
     if (!coverImageLocalPath) {
         throw new ApiError(400, "Cover Image File is Missing")
@@ -322,6 +324,74 @@ const updateUserCoverImage = AsyncHandler(async (req, res) => {
         )
 })
 
+const userChannelProfile = AsyncHandler(async (req, res) => {
+    const { userName } = req.params;
+    if (!userName?.trim()) {
+        throw new ApiError(400, 'Username must be provided')
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match: {
+                userName: userName?.toLowerCase()
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",//In "User" DB, take its ID
+                foreignField: "channel",// find upper ID in "Subscription" DB, channel field
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                    // If the requesting user exists in "$subscribers.subscriber" then return "true" otherwise return "false"
+                    then: true,
+                    else: false
+                }
+            }
+        },
+        {
+            $project: {
+                fullName: 1,
+                userName: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1,
+                createdAt: 1
+            }
+        }
+    ])
+    if (!channel?.length) {
+        throw new ApiError(404, "Channel does not exist")
+    }
+
+    return res.status(200)
+        .json(
+            new ApiResponse(200, channel[0], "User Channel Fetched Successfully")
+        )
+})
+
 export {
     registerUser,
     loginUser,
@@ -332,4 +402,5 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
+    userChannelProfile,
 }   
