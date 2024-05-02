@@ -109,9 +109,6 @@ const loginUser = AsyncHandler(async (req, res) => {
 
     const { email, userName, password } = req.body;
 
-    console.log("email: ", email);
-    console.log("userName: ", userName);
-    console.log("password: ", password);
     //validation
     if (!(email || userName)) {
         throw new ApiError(200, "username or email is required")
@@ -159,7 +156,7 @@ const logoutUser = AsyncHandler(async (req, res) => {
     User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: { refreshToken: undefined }
+            $unset: { refreshToken: 1 }//remove field from document
         },
         {
             new: true
