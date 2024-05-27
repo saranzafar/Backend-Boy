@@ -55,7 +55,7 @@ const registerUser = AsyncHandler(async (req, res) => {
 
     //check for image check for avatar
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    console.log("req.files:", req.files.avatar[0]);
+    // console.log("req.files:", req.files.avatar[0]);
     //const coverImageLocalPath = req.files?.coverImage[0]?.path;
     //alternative
     let coverImageLocalPath;
