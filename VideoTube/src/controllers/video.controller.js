@@ -50,7 +50,7 @@ const publishAVideo = AsyncHandler(async (req, res) => {
         title,
         description,
         duration: video.duration,
-        isPublished: true
+        isPublished
     })
 
 
@@ -79,11 +79,44 @@ const getVideoById = AsyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, fetchedVideo, "Video Fetched Successfully"));
 });
 
-
+//completed
 const updateVideo = AsyncHandler(async (req, res) => {
-    const { videoId } = req.params
     //TODO: update video details like title, description, thumbnail
 
+    const { videoId } = req.params
+    const { title, description } = req.body
+    if (!videoId) {
+        throw new ApiError(400, "Video ID is require")
+    }
+    if (!(title && description)) {
+        throw new ApiError(400, "Title and description is require")
+    }
+
+    // const thumbnailLocalPath = req.files?.videoFile[0]?.path;
+    const thumbnailLocalPath = req.files
+    console.log("video = ", thumbnailLocalPath);
+    if (!thumbnailLocalPath) {
+        throw new ApiError(400, "Thumbnail is require")
+    }
+
+    const updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set: {
+                title,
+                description,
+                thumbnail: thumbnailLocalPath
+            }
+        },
+        { new: true }
+    )
+
+    return res.status(200)
+        .json(
+            200,
+            updatedVideo,
+            "Video details Updated Successfully"
+        )
 })
 
 //completed
@@ -103,7 +136,6 @@ const deleteVideo = AsyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, "Video Deleted Successfully"));
 });
-
 
 //completed
 const togglePublishStatus = AsyncHandler(async (req, res) => {
