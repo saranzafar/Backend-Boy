@@ -8,23 +8,38 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 
 
 const getAllVideos = AsyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+    // const { page = 1, limit = 10, query, sortBy = 'createdAt', sortType = 'desc', userId } = req.query
     //TODO: get all videos based on query, sort, pagination
+
+    const { limit = 2, sortType = 'desc' } = req.query;
+    const page = req.query.p || 0
+    const videosPerPage = limit
+
+    const videos = await Video.find()
+        .sort(sortType)
+        .skip(page * videosPerPage)
+        .limit(videosPerPage)
+
+    return res.status(200).json({
+        status: 200,
+        videos,
+        message: "Videos fetched successfully"
+    });
+
 })
 
-//completed & tested
 const publishAVideo = AsyncHandler(async (req, res) => {
-    const { title, description, isPublished } = req.body
-    // TODO: get video, upload to cloudinary, create video
-    if (!(title || description)) {
-        throw new ApiError(405, "Please Provide title and description")
+    const { title, description, isPublished } = req.body;
+
+    // Ensure both title and description are provided
+    if (!title || !description) {
+        throw new ApiError(405, "Please provide title and description");
     }
 
-    //taking videoFile and thumbnail from public directory
-    const videoLocalPath = req.files?.videoFile[0]?.path;
-    // console.log("video = ", videoLocalPath);
+    // Take videoFile and thumbnail from public directory
+    const videoLocalPath = req.files?.videoFile?.[0]?.path;
     if (!videoLocalPath) {
-        throw new ApiError(400, "video is require")
+        throw new ApiError(400, "Video is required");
     }
 
     let thumbnailLocalPath;
@@ -32,37 +47,39 @@ const publishAVideo = AsyncHandler(async (req, res) => {
         thumbnailLocalPath = req.files.thumbnail[0].path;
     }
     if (!thumbnailLocalPath) {
-        throw new ApiError(400, "Thumbnail is require")
+        throw new ApiError(400, "Thumbnail is required");
     }
 
-    //uploading video and thumbnail to cloudinary
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
-    const video = await uploadOnCloudinary(videoLocalPath)
+    // Upload video and thumbnail to Cloudinary
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+    const video = await uploadOnCloudinary(videoLocalPath);
 
-    // console.log("video = ", typeof video.url);
-    // console.log("video = ", video.duration);
-    // console.log("thumbnail = ", thumbnail.url);
+    // Fetch owner details
+    const userId = new mongoose.Types.ObjectId(req.user._id); // Ensure ObjectId conversion
+    const owner = await User.findById(userId, 'userName fullName avatar');
+    // Ensure the fetched owner is valid
+    if (!owner) {
+        throw new ApiError(404, "Owner not found");
+    }
 
-    // create video object - create entery in DB
+    // Create video object - create entry in DB
     const videoObj = await Video.create({
         videoFile: video.url,
         thumbnail: thumbnail.url,
         title,
         description,
         duration: video.duration,
+        owner: owner,
         isPublished
-    })
-
+    });
 
     return res.status(201).json(
-        new ApiResponse(200, "Video Uploaded Successfully", videoObj)
-    )
-})
+        new ApiResponse(201, "Video uploaded successfully", videoObj)
+    );
+});
 
-//completed & tested
 const getVideoById = AsyncHandler(async (req, res) => {
     const { videoId } = req.params;
-    console.log("videoId =", videoId);
 
     // Check if videoId is provided
     if (!videoId) {
@@ -79,7 +96,6 @@ const getVideoById = AsyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, fetchedVideo, "Video Fetched Successfully"));
 });
 
-//completed
 const updateVideo = AsyncHandler(async (req, res) => {
     //TODO: update video details like title, description, thumbnail
 
@@ -93,33 +109,32 @@ const updateVideo = AsyncHandler(async (req, res) => {
     }
 
     // const thumbnailLocalPath = req.files?.videoFile[0]?.path;
-    const thumbnailLocalPath = req.files
-    console.log("video = ", thumbnailLocalPath);
+    const thumbnailLocalPath = req.file.path
+
+    //upload cloudnary to cloud
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is require")
     }
 
-    const updatedVideo = await Video.findByIdAndUpdate(
+    await Video.findByIdAndUpdate(
         videoId,
         {
             $set: {
                 title,
                 description,
-                thumbnail: thumbnailLocalPath
+                thumbnail: thumbnail.url
             }
         },
         { new: true }
     )
 
-    return res.status(200)
-        .json(
-            200,
-            updatedVideo,
-            "Video details Updated Successfully"
-        )
+    return res.status(201).json(
+        new ApiResponse(201, "Video details updatd successfully", {})
+    );
 })
 
-//completed
 const deleteVideo = AsyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
@@ -137,30 +152,35 @@ const deleteVideo = AsyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Video Deleted Successfully"));
 });
 
-//completed
 const togglePublishStatus = AsyncHandler(async (req, res) => {
-    const { videoId } = req.params
+    const { videoId } = req.params;
     if (!videoId) {
-        throw new ApiError(400, "Video Id is missing")
+        throw new ApiError(400, "Video Id is missing");
     }
 
+    // Fetch the current video document
+    const video = await Video.findById(videoId);
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    // Toggle the isPublished status
     const newVideoStatus = await Video.findByIdAndUpdate(
         videoId,
         {
             $set: {
-                isPublished: !isPublished
+                isPublished: !video.isPublished // Toggle the current status
             }
         },
         { new: true }
-    )
+    );
 
-    return res.status(200)
-        .json(
-            200,
-            newVideoStatus,
-            "Publish Status Updated Successfully"
-        )
-})
+    return res.status(200).json({
+        status: 200,
+        data: newVideoStatus,
+        message: "Publish Status Updated Successfully"
+    });
+});
 
 export {
     getAllVideos,
