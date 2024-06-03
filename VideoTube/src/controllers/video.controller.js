@@ -38,6 +38,7 @@ const publishAVideo = AsyncHandler(async (req, res) => {
 
     // Take videoFile and thumbnail from public directory
     const videoLocalPath = req.files?.videoFile?.[0]?.path;
+    console.log("videoLocalPath = ", videoLocalPath);
     if (!videoLocalPath) {
         throw new ApiError(400, "Video is required");
     }
@@ -46,6 +47,7 @@ const publishAVideo = AsyncHandler(async (req, res) => {
     if (req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail.length > 0) {
         thumbnailLocalPath = req.files.thumbnail[0].path;
     }
+    console.log("thumbnailLocalPath = ", thumbnailLocalPath);
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is required");
     }
@@ -53,14 +55,11 @@ const publishAVideo = AsyncHandler(async (req, res) => {
     // Upload video and thumbnail to Cloudinary
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
     const video = await uploadOnCloudinary(videoLocalPath);
+    console.log(thumbnail, video);
 
     // Fetch owner details
-    const userId = new mongoose.Types.ObjectId(req.user._id); // Ensure ObjectId conversion
-    const owner = await User.findById(userId, 'userName fullName avatar');
-    // Ensure the fetched owner is valid
-    if (!owner) {
-        throw new ApiError(404, "Owner not found");
-    }
+    // const userId = new mongoose.Types.ObjectId(req.user._id); // Ensure ObjectId conversion
+    // const owner = await User.findById(userId, 'userName fullName avatar');
 
     // Create video object - create entry in DB
     const videoObj = await Video.create({
@@ -69,9 +68,66 @@ const publishAVideo = AsyncHandler(async (req, res) => {
         title,
         description,
         duration: video.duration,
-        owner: owner,
+        // owner: owner,
         isPublished
     });
+
+    const owner = await User.aggregate([
+        {
+            $match: {
+                // mongoDB return string instesd of ID so mongoose is responsible for converting that string object into ID
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",//user model refrence
+                foreignField: "_id",
+                as: "newowner",
+                // pipeline: [
+                //     {
+                //         $lookup: {
+                //             from: "videos",
+                //             localField: "watchHistory",
+                //             foreignField: "_id",
+                //             as: "watchHistory",
+
+                //             pipeline: [
+                //                 {
+                //                     $project: {
+                //                         fullName: 1,
+                //                         userName: 1,
+                //                         avatar: 1
+                //                     }
+                //                 }
+                //             ]
+                //         }
+                //     },
+                //     {
+                //         $addFields: {
+                //             owner: {
+                //                 $first: "$owner"
+                //             }
+                //         }
+                //     }
+                // ]
+            },
+        },
+        {
+            $addFields: {
+                owner: {
+                    $first: "$newowner"
+                }
+            }
+        }
+    ])
+    console.log("owner = ", owner);
+    // Ensure the fetched owner is valid
+    // if (!owner) {
+    //     throw new ApiError(404, "Owner not found");
+    // }
+
 
     return res.status(201).json(
         new ApiResponse(201, "Video uploaded successfully", videoObj)
