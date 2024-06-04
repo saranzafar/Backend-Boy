@@ -232,12 +232,9 @@ const changeCurrentPassword = AsyncHandler(async (req, res) => {
 })
 
 const getCurrentUser = AsyncHandler(async (req, res) => {
-    return res.status(200)
-        .json(
-            200,
-            req.user,
-            "Current User Fetched Successfully"
-        )
+    const user = req.user;
+    return res.status(200).json(new ApiResponse(200, { user }, 'Current User Fetched Successfully'))
+
 })
 
 const updateAccountDetails = AsyncHandler(async (req, res) => {
@@ -286,9 +283,9 @@ const updateUserAvatar = AsyncHandler(async (req, res) => {
 
     return res.status(200)
         .json(
-            200,
-            user,
-            "Avatar Image Updated Successfully"
+            new ApiResponse(200,
+                user,
+                "Avatar Image Updated Successfully")
         )
 })
 
@@ -316,10 +313,11 @@ const updateUserCoverImage = AsyncHandler(async (req, res) => {
 
     return res.status(200)
         .json(
-            200,
-            user,
-            "Cover Image Updated Successfully"
-        )
+            new ApiResponse(
+                200,
+                user,
+                "Cover Image Updated Successfully"
+            ))
 })
 
 const getWatchHistory = AsyncHandler(async (req, res) => {
@@ -378,15 +376,16 @@ const getWatchHistory = AsyncHandler(async (req, res) => {
 })
 
 const getUserChannelProfile = AsyncHandler(async (req, res) => {
-    const { userName } = req.params;
-    if (!userName?.trim()) {
+    const { username } = req.params;
+    console.log("userName = ", username);
+    if (!username?.trim()) {
         throw new ApiError(400, 'Username must be provided')
     }
 
     const channel = await User.aggregate([
         {
             $match: {
-                userName: userName?.toLowerCase()
+                userName: username?.toLowerCase()
             }
         },
         {

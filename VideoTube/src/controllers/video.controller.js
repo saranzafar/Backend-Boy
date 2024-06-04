@@ -38,7 +38,6 @@ const publishAVideo = AsyncHandler(async (req, res) => {
 
     // Take videoFile and thumbnail from public directory
     const videoLocalPath = req.files?.videoFile?.[0]?.path;
-    console.log("videoLocalPath = ", videoLocalPath);
     if (!videoLocalPath) {
         throw new ApiError(400, "Video is required");
     }
@@ -47,7 +46,6 @@ const publishAVideo = AsyncHandler(async (req, res) => {
     if (req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail.length > 0) {
         thumbnailLocalPath = req.files.thumbnail[0].path;
     }
-    console.log("thumbnailLocalPath = ", thumbnailLocalPath);
     if (!thumbnailLocalPath) {
         throw new ApiError(400, "Thumbnail is required");
     }
@@ -55,7 +53,6 @@ const publishAVideo = AsyncHandler(async (req, res) => {
     // Upload video and thumbnail to Cloudinary
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
     const video = await uploadOnCloudinary(videoLocalPath);
-    console.log(thumbnail, video);
 
     // Fetch owner details
     // const userId = new mongoose.Types.ObjectId(req.user._id); // Ensure ObjectId conversion
@@ -71,48 +68,32 @@ const publishAVideo = AsyncHandler(async (req, res) => {
         // owner: owner,
         isPublished
     });
+    console.log("videoObj = ", videoObj._id);
 
-    const owner = await User.aggregate([
+    const owner = await Video.aggregate([
         {
             $match: {
                 // mongoDB return string instesd of ID so mongoose is responsible for converting that string object into ID
-                _id: new mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(videoObj._id)
             }
         },
         {
             $lookup: {
                 from: "users",
-                localField: "owner",//user model refrence
+                localField: "owner",
                 foreignField: "_id",
                 as: "newowner",
-                // pipeline: [
-                //     {
-                //         $lookup: {
-                //             from: "videos",
-                //             localField: "watchHistory",
-                //             foreignField: "_id",
-                //             as: "watchHistory",
 
-                //             pipeline: [
-                //                 {
-                //                     $project: {
-                //                         fullName: 1,
-                //                         userName: 1,
-                //                         avatar: 1
-                //                     }
-                //                 }
-                //             ]
-                //         }
-                //     },
-                //     {
-                //         $addFields: {
-                //             owner: {
-                //                 $first: "$owner"
-                //             }
-                //         }
-                //     }
-                // ]
-            },
+                pipeline: [
+                    {
+                        $project: {
+                            fullName: 1,
+                            userName: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
         },
         {
             $addFields: {
