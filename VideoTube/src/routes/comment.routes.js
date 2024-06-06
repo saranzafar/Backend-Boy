@@ -5,13 +5,17 @@ import {
     getVideoComments,
     updateComment,
 } from "../controllers/comment.controller.js"
-import {veriftJwt} from "../middlewares/auth.middleware.js"
+import { veriftJwt } from "../middlewares/auth.middleware.js"
 
 const router = Router();
 
 router.use(veriftJwt); // Apply verifyJWT middleware to all routes in this file
 
-router.route("/:videoId").get(getVideoComments).post(addComment);
-router.route("/c/:commentId").delete(deleteComment).patch(updateComment);
+router.route("/:videoId")
+    .get(getVideoComments)
+    .post(addComment);
+router.route("/c/:commentId")
+    .delete(deleteComment)
+    .patch(updateComment);
 
 export default router

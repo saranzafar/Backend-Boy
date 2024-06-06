@@ -10,6 +10,11 @@ const commentSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Video",
     },
+    //i added this field for best UI practices
+    update: {
+        type: Boolean,
+        default: false
+    },
     owner: {
         type: Schema.Types.ObjectId,
         ref: "User",

@@ -11,7 +11,7 @@ const getAllVideos = AsyncHandler(async (req, res) => {
     // const { page = 1, limit = 10, query, sortBy = 'createdAt', sortType = 'desc', userId } = req.query
     //TODO: get all videos based on query, sort, pagination
 
-    const { limit = 2, sortType = 'desc' } = req.query;
+    const { limit = 10, sortType = 'desc' } = req.query;
     const page = req.query.p || 0
     const videosPerPage = limit
 
@@ -62,30 +62,6 @@ const publishAVideo = AsyncHandler(async (req, res) => {
         owner: req.user
     })
     console.log("videoObj = ", videoObj);
-
-    // const owner = await Video.aggregate([
-    //     {
-    //         $match: {
-    //             _id: new mongoose.Types.ObjectId(videoObj._id)
-    //         }
-    //     },
-    //     {
-    //         $lookup: {
-    //             from: "users",
-    //             localField: "owner",
-    //             foreignField: "_id",
-    //             as: "owner",
-    //         }
-    //     },
-    //     {
-    //         $addFields: {
-    //             owner: {
-    //                 $first: "$owner"
-    //             }
-    //         }
-    //     }
-    // ])
-    // console.log("owner = ", owner);
 
     return res.status(201).json(
         new ApiResponse(201, "Video uploaded successfully", videoObj)
@@ -156,7 +132,6 @@ const deleteVideo = AsyncHandler(async (req, res) => {
         throw new ApiError(400, "Please provide video ID");
     }
 
-    // Ensure you are using the correct model
     const deletedVideo = await Video.deleteOne({ _id: videoId });
 
     if (deletedVideo.deletedCount === 0) {
