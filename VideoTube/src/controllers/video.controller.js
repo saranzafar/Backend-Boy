@@ -31,12 +31,10 @@ const getAllVideos = AsyncHandler(async (req, res) => {
 const publishAVideo = AsyncHandler(async (req, res) => {
     const { title, description, isPublished } = req.body;
 
-    // Ensure both title and description are provided
     if (!title || !description) {
         throw new ApiError(405, "Please provide title and description");
     }
 
-    // Take videoFile and thumbnail from public directory
     const videoLocalPath = req.files?.videoFile?.[0]?.path;
     if (!videoLocalPath) {
         throw new ApiError(400, "Video is required");
@@ -54,61 +52,40 @@ const publishAVideo = AsyncHandler(async (req, res) => {
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
     const video = await uploadOnCloudinary(videoLocalPath);
 
-    // Fetch owner details
-    // const userId = new mongoose.Types.ObjectId(req.user._id); // Ensure ObjectId conversion
-    // const owner = await User.findById(userId, 'userName fullName avatar');
-
-    // Create video object - create entry in DB
     const videoObj = await Video.create({
         videoFile: video.url,
         thumbnail: thumbnail.url,
         title,
         description,
         duration: video.duration,
-        // owner: owner,
-        isPublished
-    });
-    console.log("videoObj = ", videoObj._id);
+        isPublished,
+        owner: req.user
+    })
+    console.log("videoObj = ", videoObj);
 
-    const owner = await Video.aggregate([
-        {
-            $match: {
-                // mongoDB return string instesd of ID so mongoose is responsible for converting that string object into ID
-                _id: new mongoose.Types.ObjectId(videoObj._id)
-            }
-        },
-        {
-            $lookup: {
-                from: "users",
-                localField: "owner",
-                foreignField: "_id",
-                as: "newowner",
-
-                pipeline: [
-                    {
-                        $project: {
-                            fullName: 1,
-                            userName: 1,
-                            avatar: 1
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            $addFields: {
-                owner: {
-                    $first: "$newowner"
-                }
-            }
-        }
-    ])
-    console.log("owner = ", owner);
-    // Ensure the fetched owner is valid
-    // if (!owner) {
-    //     throw new ApiError(404, "Owner not found");
-    // }
-
+    // const owner = await Video.aggregate([
+    //     {
+    //         $match: {
+    //             _id: new mongoose.Types.ObjectId(videoObj._id)
+    //         }
+    //     },
+    //     {
+    //         $lookup: {
+    //             from: "users",
+    //             localField: "owner",
+    //             foreignField: "_id",
+    //             as: "owner",
+    //         }
+    //     },
+    //     {
+    //         $addFields: {
+    //             owner: {
+    //                 $first: "$owner"
+    //             }
+    //         }
+    //     }
+    // ])
+    // console.log("owner = ", owner);
 
     return res.status(201).json(
         new ApiResponse(201, "Video uploaded successfully", videoObj)
