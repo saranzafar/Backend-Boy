@@ -6,6 +6,10 @@ const tweetSchema = new Schema({
         type: String,
         requred: true
     },
+    update: {
+        type: Boolean,
+        default: false
+    },
     owner: {
         type: Schema.Types.ObjectId,
         ref: "User",

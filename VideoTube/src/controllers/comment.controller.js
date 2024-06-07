@@ -2,7 +2,7 @@ import mongoose from "mongoose"
 import { Comment } from "../models/comment.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
-import { AsyncHandler } from "../utils/AsyncHandler.js"
+import { AsyncHandler } from "../utils/asyncHandler.js"
 
 const getVideoComments = AsyncHandler(async (req, res) => {
     // TODO: get all comments for a video
@@ -64,7 +64,6 @@ const updateComment = AsyncHandler(async (req, res) => {
     if (!comment || !commentId) {
         throw new ApiError(405, "Please provide Comment and comment ID");
     }
-    console.log(comment, commentId);
 
     const updatedComment = await Comment.findOneAndUpdate(
         { _id: commentId },
