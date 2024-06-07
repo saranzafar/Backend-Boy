@@ -8,7 +8,7 @@ import {
     removeVideoFromPlaylist,
     updatePlaylist,
 } from "../controllers/playlist.controller.js"
-import {veriftJwt} from "../middlewares/auth.middleware.js"
+import { veriftJwt } from "../middlewares/auth.middleware.js"
 
 const router = Router();
 
@@ -22,8 +22,10 @@ router
     .patch(updatePlaylist)
     .delete(deletePlaylist);
 
-router.route("/add/:videoId/:playlistId").patch(addVideoToPlaylist);
-router.route("/remove/:videoId/:playlistId").patch(removeVideoFromPlaylist);
+router.route("/add/:videoId/:playlistId")
+    .patch(addVideoToPlaylist);
+router.route("/remove/:videoId/:playlistId")
+    .patch(removeVideoFromPlaylist);
 
 router.route("/user/:userId").get(getUserPlaylists);
 

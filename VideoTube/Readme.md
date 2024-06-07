@@ -3,12 +3,11 @@
 ## Overview
 
 This repository is part of a comprehensive video series on backend development with JavaScript. The project showcases the development of a complete backend system for a video hosting website similar to YouTube.
-- [Model Link] (https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
 
 ## Project Links
 
-- [Model Link](#)
-- [Video Playlist](#)
+- [Model Link](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
+- [Video Playlist](https://www.youtube.com/watch?v=EH3vGeqeIAo&list=PLu71SKxNbfoBGh_8p_NS-ZAh6v7HhYqHW&pp=iAQB)
 
 ## Project Summary
 
@@ -42,17 +41,7 @@ We adhere to standard practices like using JWT for authentication, bcrypt for pa
 
 ### How to Contribute
 
-We welcome contributions to this open-source project. However, please note that this is not a typical project where any pull request (PR) will be merged. 
-
-#### Steps to Contribute:
-
-1. **Complete Assignments**: Focus on the assignments located in the `controller` folder. Ensure all tasks are fully completed.
-2. **Reach Out**: Once you have finished the assignments, reach out to us on Discord or Twitter.
-3. **Review**: After reviewing your contributions, we will add a link to your repository in this README.
-
-### Top Contributor
-
-- **Spiderman**: [Sample Link to Repo](#)
+We welcome contributions to this project. However, please note that this is not a typical project where any pull request (PR) will be merged. 
 
 ## Learning Outcomes
 
