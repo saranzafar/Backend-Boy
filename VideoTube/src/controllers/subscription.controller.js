@@ -7,18 +7,72 @@ import { AsyncHandler } from "../utils/asyncHandler.js"
 
 
 const toggleSubscription = AsyncHandler(async (req, res) => {
-    const { channelId } = req.params
     // TODO: toggle subscription
+    const { channelId } = req.params
+    const { userId } = req.user
+    if (!channelId) {
+        throw new ApiError(400, "Channel ID is missing")
+    }
+
+    const checkUser = await Subscription.find({
+        $and: [{ channel: channelId }, { subscriber: userId }]
+    })
+
+    // if channel/user available, delete it (unsubscribe) 
+    if (checkUser[0]) {
+        await Subscription.findByIdAndDelete(checkUser[0]._id)
+        return res.status(200)
+            .json(
+                new ApiResponse(200, {}, "Unsubscribed")
+            )
+    }
+    // else create it (subscribe) 
+    else {
+        const subscribed = await Subscription.create({
+            subscriber: req.user,
+            channel: channelId
+        })
+        if (!subscribed) {
+            throw new ApiError(500, "subscription failed")
+        }
+        
+        return res.status(200)
+            .json(
+                new ApiResponse(200, subscribed, "Subscribed")
+            )
+    }
 })
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = AsyncHandler(async (req, res) => {
-    const { channelId } = req.params
+    // checking the number of subscribers of a channel  
+    const { subscriberId } = req.params
+    if (!subscriberId) {
+        throw new ApiError(400, "Invalid Channel ID")
+    }
+
+    const subscribers = await Subscription.find({ channel: subscriberId }).select("-subscriber -channel")
+    return res.status(201).json(
+        new ApiResponse(200, subscribers.length, "Subscribers fetched Successfully")
+    )
 })
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = AsyncHandler(async (req, res) => {
-    const { subscriberId } = req.params
+    // checking the number of subscribed channels  
+    const { channelId } = req.params
+    if (!channelId) {
+        throw new ApiError(400, "Channel id is require")
+    }
+
+    const channels = await Subscription.find({ subscriber: channelId })
+    const channelsObj = {
+        numOfChannels: channels.length,
+        channels
+    }
+    return res.status(201).json(
+        new ApiResponse(200, channelsObj, "Channels fetched Successfully")
+    )
 })
 
 export {
