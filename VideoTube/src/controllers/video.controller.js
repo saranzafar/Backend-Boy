@@ -76,7 +76,11 @@ const getVideoById = AsyncHandler(async (req, res) => {
     }
 
     // Find the video by ID
-    const fetchedVideo = await Video.findById(videoId);
+    const fetchedVideo = await Video.findByIdAndUpdate(
+        { _id: videoId },
+        { $inc: { views: 1 } },
+        { new: true }
+    );
     if (!fetchedVideo) {
         return res.status(404).json(new ApiResponse(404, {}, 'Video not found'));
     }
