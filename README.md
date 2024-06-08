@@ -2,10 +2,11 @@
 
 ## Overview
 
-This repository is part of a comprehensive video series on backend development with JavaScript. The project showcases the development of a complete backend system for a video hosting website similar to YouTube.
+This repository[VideoTube](https://github.com/saranzafar/Backend-Boy/tree/main/VideoTube) is part of a comprehensive video series on backend development with JavaScript. The project showcases the development of a complete backend system for a video hosting website similar to YouTube + Tweeter or X.
 
 ## Project Links
 
+- [All APIs](https://documenter.getpostman.com/view/28434920/2sA3XJn5u8)
 - [Model Link](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
 - [Video Playlist](https://www.youtube.com/watch?v=EH3vGeqeIAo&list=PLu71SKxNbfoBGh_8p_NS-ZAh6v7HhYqHW&pp=iAQB)
 
