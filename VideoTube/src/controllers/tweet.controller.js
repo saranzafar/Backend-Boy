@@ -26,7 +26,6 @@ const createTweet = AsyncHandler(async (req, res) => {
 const getUserTweets = AsyncHandler(async (req, res) => {
     // TODO: get user tweets
     const { userId } = req.params;
-    console.log(userId);
     if (!isValidObjectId(userId)) {
         return res.status(404).json(new ApiResponse(404, {}, 'Invalid tweet ID'));
     }

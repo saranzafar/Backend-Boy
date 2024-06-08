@@ -377,7 +377,6 @@ const getWatchHistory = AsyncHandler(async (req, res) => {
 
 const getUserChannelProfile = AsyncHandler(async (req, res) => {
     const { username } = req.params;
-    console.log("userName = ", username);
     if (!username?.trim()) {
         throw new ApiError(400, 'Username must be provided')
     }
